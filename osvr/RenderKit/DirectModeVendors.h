@@ -241,6 +241,7 @@ namespace renderkit {
             Vendor{"TVL", "TotalVision"},
             Vendor{"FOV", "FOVE"},
             Vendor{"LZT", "HomeVR"},
+            Vendor{"TSB", "ValityXR"},
             /* add new vendors here - keep grouped by display descriptor vendor */
         };
         return vendors;
