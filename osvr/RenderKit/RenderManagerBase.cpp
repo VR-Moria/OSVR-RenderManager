@@ -2354,7 +2354,7 @@ namespace renderkit {
       }
 #endif
 #if defined(RM_USE_NVIDIA_DIRECT_D3D11) || defined(RM_USE_AMD_DIRECT_D3D11) || defined(RM_USE_INTEL_DIRECT_D3D11)
-#if defined(RM_USE_NVIDIA_DIRECT_D3D11)
+  #if defined(RM_USE_NVIDIA_DIRECT_D3D11)
       if ((ret == nullptr) && RenderManagerNVidiaD3D11::DirectModeAvailable(
           params.m_directVendorIds)) {
         ret = new RenderManagerNVidiaD3D11(context, params);
@@ -2363,8 +2363,8 @@ namespace renderkit {
           ret = nullptr;
         }
       }
-#endif
-#if defined(RM_USE_AMD_DIRECT_D3D11)
+  #endif
+  #if defined(RM_USE_AMD_DIRECT_D3D11)
       // Our method for determining whether there is an AMD card currently
       // has a false positive if there has ever been an AMD driver on the
       // system, so we check for this after all other vendor-specific
