@@ -67,7 +67,7 @@ namespace renderkit {
       public:
         virtual ~RenderManagerOpenGL();
 
-        // Opens the D3D renderer we're going to use.
+        // Opens the OpenGL renderer we're going to use.
         OpenResults OpenDisplay() override;
 
         bool OSVR_RENDERMANAGER_EXPORT GetTimingInfo(size_t whichEye, OSVR_RenderTimingInfo& info) override;

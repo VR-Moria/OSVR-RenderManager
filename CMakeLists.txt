@@ -73,6 +73,7 @@ find_package(nvapi COMPONENTS NDA)
 find_package(liquidvr)
 find_package(OpenGL)
 find_package(OpenGLES2)
+find_package(Vulkan)
 find_package(GLEW)
 find_package(SDL2)
 if(WIN32)
@@ -178,11 +179,26 @@ endif()
 
 set(OSVRRM_HAVE_OPENGL_SUPPORT OFF)
 set(OSVRRM_HAVE_D3D11_SUPPORT OFF)
+set(OSVRRM_HAVE_VULKAN_SUPPORT OFF)
 set(OSVRRM_USE_OPENGLES20 OFF)
 if (WIN32)
 	set(OSVRRM_HAVE_D3D11_SUPPORT ON)
 	set(RM_USE_D3D11 TRUE)
 	message(STATUS " - D3D11 support: enabled (found WIN32)")
+endif()
+
+#-----------------------------------------------------------------------------
+# Vulkan library as a stand-alone renderer which can also be wrapped by OpenGL.
+if (Vulkan_FOUND AND SDL2_FOUND)
+	list(APPEND RenderManager_SOURCES osvr/RenderKit/RenderManagerVulkan.cpp osvr/RenderKit/RenderManagerVulkan.h)
+	message(STATUS " - Vulkan support: enabled")
+	set(RM_USE_VULKAN TRUE)
+else()
+	message(STATUS " - Vulkan support: disabled)")
+endif()
+
+if(RM_USE_VULKAN)
+	list(APPEND OSVRRM_IMPL_COMMON_INCLUDE_DIRS ${Vulkan_INCLUDE_DIRS})
 endif()
 
 #-----------------------------------------------------------------------------
@@ -388,8 +404,10 @@ set (RenderManager_PUBLIC_HEADERS
 	osvr/RenderKit/RenderManagerOpenGLC.h
 	osvr/RenderKit/RenderManagerOpenGLVersion.h
     osvr/RenderKit/RenderManagerD3DOpenGL.h
+	osvr/RenderKit/RenderManagerVulkan.h
 	osvr/RenderKit/GraphicsLibraryD3D11.h
 	osvr/RenderKit/GraphicsLibraryOpenGL.h
+	osvr/RenderKit/GraphicsLibraryVulkan.h
 	osvr/RenderKit/MonoPointMeshTypes.h
 	osvr/RenderKit/RGBPointMeshTypes.h
 	osvr/RenderKit/RenderKitGraphicsTransforms.h
@@ -461,6 +479,11 @@ if(GLEW_FOUND AND WIN32 AND NOT GLEW_LIBRARY MATCHES ".*s.lib")
 	set(OSVRRM_NEED_GLEW_COPIED TRUE)
 else()
 	set(OSVRRM_NEED_GLEW_COPIED FALSE)
+endif()
+
+if (Vulkan_FOUND)
+	target_include_directories(osvrRenderManager PRIVATE ${Vulkan_INCLUDE_DIRS})
+	target_link_libraries(osvrRenderManager PRIVATE ${Vulkan_LIBRARIES})
 endif()
 
 if (OPENGL_FOUND)

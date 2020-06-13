@@ -83,12 +83,15 @@ namespace renderkit {
     /// and also #include the appropriate file that describes the class.
     class GraphicsLibraryD3D11;
     class GraphicsLibraryOpenGL;
+    class GraphicsLibraryVulkan;
     class GraphicsLibrary {
       public:
         GraphicsLibraryD3D11* D3D11 =
             nullptr; ///< #include <osvr/RenderKit/GraphicsLibraryD3D11.h>
         GraphicsLibraryOpenGL* OpenGL =
             nullptr; ///< #include <osvr/RenderKit/GraphicsLibraryOpenGL.h>
+        GraphicsLibraryVulkan* Vulkan =
+            nullptr; ///< #include <osvr/RenderKit/GraphicsLibraryVulkan.h>
     };
 
     /// @brief Used to pass Render Texture targets to be rendered
@@ -101,17 +104,21 @@ namespace renderkit {
     /// file that describes the class.
     class RenderBufferD3D11;
     class RenderBufferOpenGL;
+    class RenderBufferVulkan;
     class RenderBuffer {
       public:
         OSVR_RENDERMANAGER_EXPORT RenderBuffer() {
             D3D11 = nullptr;
             OpenGL = nullptr;
+            Vulkan = nullptr;
         }
 
         RenderBufferD3D11*
             D3D11; ///< #include <osvr/RenderKit/GraphicsLibraryD3D11.h>
         RenderBufferOpenGL*
             OpenGL; ///< #include <osvr/RenderKit/GraphicsLibraryOpenGL.h>
+        RenderBufferVulkan*
+            Vulkan; ///< #include <osvr/RenderKit/GraphicsLibraryVulkan.h>
     };
 
     /// @brief Simple structure for representing a float based RGB color
