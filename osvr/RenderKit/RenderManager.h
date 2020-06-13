@@ -1078,11 +1078,11 @@ namespace renderkit {
         //  RenderFrameFinalize
 
         /// @brief Called at the beginning of the first Render() call.
-        virtual bool RenderPathSetup() = 0;
+        virtual bool OSVR_RENDERMANAGER_EXPORT RenderPathSetup() = 0;
         bool m_renderPathSetupDone = false;
 
         /// @brief Initialize rendering for a new frame
-        virtual bool RenderFrameInitialize() = 0;
+        virtual bool OSVR_RENDERMANAGER_EXPORT RenderFrameInitialize() = 0;
 
         /// @brief Initialize rendering for a new display
         virtual bool OSVR_RENDERMANAGER_EXPORT
