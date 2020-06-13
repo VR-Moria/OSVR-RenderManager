@@ -70,6 +70,7 @@ namespace renderkit {
 
     RenderManager::OpenResults RenderManagerVulkan::OpenDisplay(void) {
         OpenResults ret;
+        ret.status = COMPLETE; // Until we hear otherwise
 
         // All public methods that use internal state should be guarded
         // by a mutex.
@@ -132,13 +133,13 @@ namespace renderkit {
             m_displays[display].m_window = TODO(
                 windowTitle.c_str(), windowX, m_params.m_windowYPosition,
                 widthRotated, heightRotated, flags);
-            */
             if (m_displays[display].m_window == nullptr) {
               m_log->error()
                     << "RenderManagerVulkan::OpenDisplay: Could not get window "
                     << "for display " << display;
                 return withFailure();
             }
+            */
 
             //======================================================
             // Find out the size of the window we just created (which may
