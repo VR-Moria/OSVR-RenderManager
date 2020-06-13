@@ -55,7 +55,7 @@ namespace renderkit {
 
       protected:
 
-       virtual bool OSVR_RENDERMANAGER_EXPORT PresentRenderBuffersInternal(
+       bool OSVR_RENDERMANAGER_EXPORT PresentRenderBuffersInternal(
               const std::vector<RenderBuffer>& buffers,
               const std::vector<RenderInfo>& renderInfoUsed,
               const RenderParams& renderParams = RenderParams(),
@@ -69,7 +69,7 @@ namespace renderkit {
             OSVR_ClientContext context,
             ConstructorParameters p);
 
-        virtual bool OSVR_RENDERMANAGER_EXPORT UpdateDistortionMeshesInternal(
+        bool OSVR_RENDERMANAGER_EXPORT UpdateDistortionMeshesInternal(
             DistortionMeshType type ///< Type of mesh to produce
             ,
             std::vector<DistortionParameters> const&
