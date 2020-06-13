@@ -449,9 +449,6 @@ namespace renderkit {
             return false;
         }
 
-        // Register the render buffers we're going to use to present
-        return RegisterRenderBuffersInternal(m_renderBuffers);
-
         // Store the info about the buffers for the render callbacks.
         // Start with the 0th eye.
         m_buffers.D3D11->colorBuffer = m_renderBuffers[0].D3D11->colorBuffer;
@@ -461,6 +458,9 @@ namespace renderkit {
             m_renderBuffers[0].D3D11->depthStencilBuffer;
         m_buffers.D3D11->depthStencilView =
             m_renderBuffers[0].D3D11->depthStencilView;
+
+        // Register the render buffers we're going to use to present
+        return RegisterRenderBuffersInternal(m_renderBuffers);
     }
 
     RenderManager::OpenResults RenderManagerD3D11Base::OpenDisplay() {
