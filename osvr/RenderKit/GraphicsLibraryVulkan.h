@@ -37,11 +37,12 @@ namespace renderkit {
     /// for a render callback handler in an application using Vulkan
     /// as its renderer.  It is in a separate include file so
     /// that only code that actually uses this needs to
-    /// include it.  NOTE: You must #include <vulkan/vulkan.hpp> before
+    /// include it.  NOTE: You must #include <vulkan/vulkan.h> before
     /// including this file.
 
     class GraphicsLibraryVulkan {
       public:
+        VkInstance    instance = VK_NULL_HANDLE;
         /// @todo Add device and context pointers
     };
 
@@ -50,7 +51,7 @@ namespace renderkit {
     /// This is one of the members of the RenderBuffer union
     /// from RenderManager.h.  It stores the information needed
     /// for a Vulkan texture.
-    /// NOTE: You must #include <vulkan/vulkan.hpp> before
+    /// NOTE: You must #include <vulkan/vulkan.h> before
     /// including this file.
 
     class RenderBufferVulkan {

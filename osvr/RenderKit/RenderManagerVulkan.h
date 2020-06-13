@@ -30,6 +30,7 @@ ReliaSolnve, Inc.
 #include <SDL.h>
 #include "RenderManagerSDLInitQuit.h"
 #endif
+#include <vulkan/vulkan.h>
 
 /// @todo Implement a C API as well, as with OpenGL and DirectX11
 
@@ -47,19 +48,22 @@ namespace renderkit {
           GetTimingInfo(size_t whichEye, OSVR_RenderTimingInfo& info) override;
 
       protected:
-        bool m_displayOpen; ///< Has our display been opened?
 
         /// Construct a Vulkan RenderManager.
         RenderManagerVulkan(
             OSVR_ClientContext context,
             ConstructorParameters p);
 
+        bool m_displayOpen;         ///< Has our display been opened?
+        VkInstance m_instance;      ///< The Vulkan instance we're going to use
+
         // Classes and structures needed to do our rendering.
         class DisplayInfo {
           public:
-            /// @todo Shared pointers to objects needed to do our rendering that
+            /// @todo Objects needed to do our rendering that
             /// will be deleted in the destructor.
-            SDL_Window* m_window = nullptr; ///< SDL window pointer
+            SDL_Window* m_window = nullptr;           ///< SDL window pointer
+            VkSurfaceKHR m_surface = VK_NULL_HANDLE;  ///< Surface created on this window
         };
         std::vector<DisplayInfo> m_displays;
 

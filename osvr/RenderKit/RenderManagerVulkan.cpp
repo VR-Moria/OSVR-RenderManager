@@ -30,6 +30,7 @@ ReliaSolve, Inc.
 #include <osvr/Util/Logger.h>
 
 #include <SDL_vulkan.h>
+#include <vulkan/vulkan.h>
 
 #include <iostream>
 
@@ -42,13 +43,30 @@ namespace renderkit {
     RenderManagerVulkan::RenderManagerVulkan(OSVR_ClientContext context, ConstructorParameters p)
         : RenderManager(context, p) {
 
-        // Initialize our state.
-        /// @todo null the device and context pointers
         m_displayOpen = false;
 
         // Construct the appropriate GraphicsLibrary pointers.
         m_library.Vulkan = new GraphicsLibraryVulkan;
         m_buffers.Vulkan = new RenderBufferVulkan;
+
+        // Initialize our state.
+        VkApplicationInfo appInfo = {};
+        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pApplicationName = "Vulkan SDL tutorial";
+        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.pEngineName = "No Engine";
+        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_0;
+
+        VkInstanceCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        createInfo.pApplicationInfo = &appInfo;
+        createInfo.enabledExtensionCount = 0;
+        const char *eNames[] = { VK_KHR_SURFACE_EXTENSION_NAME };
+        createInfo.ppEnabledExtensionNames = eNames;
+        VkResult result = vkCreateInstance(&createInfo, 0, &m_library.Vulkan->instance);
+        /// @todo null the device and context pointers
+
         /// @todo Initialize depth/stencil state for rendering
         /// @todo Initialize depth/stencil state for presenting
     }
@@ -57,14 +75,25 @@ namespace renderkit {
         // Release any prior buffers we allocated
         m_distortionMeshBuffer.clear();
 
-        for (size_t i = 0; i < m_displays.size(); i++) {
-            if (m_displays[i].m_window != nullptr) {
-                /// @todo Destroy each window
+        if (m_library.Vulkan->instance) {
+            for (size_t i = 0; i < m_displays.size(); i++) {
+                if (m_displays[i].m_surface != nullptr) {
+                    vkDestroySurfaceKHR(m_library.Vulkan->instance,
+                        m_displays[i].m_surface, 0);
+                }
+                if (m_displays[i].m_window != nullptr) {
+                    SDL_DestroyWindow(m_displays[i].m_window);
+                }
+            }
+            if (m_displayOpen) {
+                /// @todo Clean up anything else we need to
             }
         }
-        if (m_displayOpen) {
-            /// @todo Clean up anything else we need to
-            m_displayOpen = false;
+        m_displayOpen = false;
+
+        // Done with Vulkan
+        if (m_library.Vulkan && m_library.Vulkan->instance) {
+            vkDestroyInstance(m_library.Vulkan->instance, 0);
         }
     }
 
@@ -84,15 +113,38 @@ namespace renderkit {
             return ret;
         };
 
+        // Make sure we have an instance.
+        if (!m_library.Vulkan->instance) {
+            m_log->error() << "RenderManagerVulkan::OpenDisplay: No "
+                "Vulkan instance";
+            return withFailure();
+        }
+
         /// @todo How to handle window resizing?
 
         //======================================================
-        // Get a window.
+        // Use SDL to get us a window.
+        /// @todo Enable DirectMode windows when they are asked for, using
+        // OS-native calls.
+
+        // Initialize the SDL video subsystem.
+        if (!SDLInitQuit()) {
+            m_log->error() << "RenderManagerVulkan::OpenDisplay: Could not "
+                "initialize SDL";
+            return withFailure();
+        }
 
         // Figure out the flags we want
-        /// @todo
+        Uint32 flags = SDL_WINDOW_RESIZABLE;
+        flags |= SDL_WINDOW_VULKAN;
         if (m_params.m_windowFullScreen) {
-            /// @todo
+            //        flags |= SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS;
+            flags |= SDL_WINDOW_BORDERLESS;
+        }
+        if (true) {
+            flags |= SDL_WINDOW_SHOWN;
+        } else {
+            flags |= SDL_WINDOW_HIDDEN;
         }
 
         // @todo Pull this calculation out into the base class and
@@ -128,9 +180,7 @@ namespace renderkit {
             int windowX = static_cast<int>(m_params.m_windowXPosition +
                                            widthRotated * display);
 
-            /// @todo Create window of given size and parameters
-            /*
-            m_displays[display].m_window = TODO(
+            m_displays[display].m_window = SDL_CreateWindow(
                 windowTitle.c_str(), windowX, m_params.m_windowYPosition,
                 widthRotated, heightRotated, flags);
             if (m_displays[display].m_window == nullptr) {
@@ -139,12 +189,19 @@ namespace renderkit {
                     << "for display " << display;
                 return withFailure();
             }
-            */
+            if (!SDL_Vulkan_CreateSurface(m_displays[display].m_window,
+                    m_library.Vulkan->instance, &m_displays[display].m_surface)) {
+                m_log->error()
+                    << "RenderManagerVulkan::OpenDisplay: Could not get surface "
+                    << "for display " << display;
+                return withFailure();
+            }
 
             //======================================================
             // Find out the size of the window we just created (which may
             // differ from what we asked for due to zoom factors).
-            /// @todo SDL_Vulkan_GetDrawableSize()
+            int width, height;
+            SDL_GetWindowSize(m_displays[display].m_window, &width, &height);
 
             //======================================================
             // Create the color buffers to be used to render into.
@@ -207,8 +264,18 @@ namespace renderkit {
     }
 
     bool RenderManagerVulkan::PresentFrameFinalize() {
-        // Let the window manager handle any system events that it needs to.
-        /// @todo
+        // Let SDL handle any system events that it needs to.
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            // If SDL has been given a quit event, what should we do?
+            // We return false to let the app know that something went wrong.
+            if (e.window.event == SDL_QUIT) {
+                return false;
+            }
+            else if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
+                return false;
+            }
+        }
 
         return true;
     }
