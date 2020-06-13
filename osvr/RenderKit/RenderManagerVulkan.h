@@ -63,18 +63,94 @@ namespace renderkit {
         };
         std::vector<DisplayInfo> m_displays;
 
+        //============================================================================
+        // Information needed to render to the final output buffer.  Render
+        // state and geometries needed to go from the presented buffers to the
+        // screen.
+        struct XMFLOAT3 {
+            float x;
+            float y;
+            float z;
+        };
+        struct XMFLOAT2 {
+            float x;
+            float y;
+        };
+        struct DistortionVertex {
+            XMFLOAT3 Pos;
+            XMFLOAT2 TexR;
+            XMFLOAT2 TexG;
+            XMFLOAT2 TexB;
+        };
+        struct DistortionMeshBuffer {
+            /// Used to render quads for present mode
+            /// @todo vertex buffer
+            /// Backing data for vertexBuffer
+            /// @todo vertex buffer
+            std::vector<DistortionVertex> vertices;
+            /// Vertex indices, for DrawIndexed
+            /// @todo Index buffer
+            /// Backing data for indexBuffer
+            std::vector<uint16_t> indices;
+        };
+
+        /// @todo One per eye/display combination in case of multiple displays
+        /// per eye
+        std::vector<DistortionMeshBuffer> m_distortionMeshBuffer;
+
+        //============================================================================
+        // Information needed to provide render and depth/stencil buffers for
+        // each of the eyes we give to the user to use when rendering.  This is
+        // for user code to render into.
+        //   This is only used in the non-present-mode interface.
+        std::vector<osvr::renderkit::RenderBuffer> m_renderBuffers;
+        bool OSVR_RENDERMANAGER_EXPORT constructRenderBuffers();
+
         //===================================================================
         // Overloaded render functions from the base class.
-        bool RenderFrameInitialize() override { return true; }
-        bool RenderDisplayInitialize(size_t display) override { return true; }
-        bool RenderEyeFinalize(size_t eye) override { return true; }
-        bool RenderDisplayFinalize(size_t display) override { return true; }
+        bool OSVR_RENDERMANAGER_EXPORT RenderPathSetup() override;
 
-        bool PresentDisplayInitialize(size_t display) override;
-        bool PresentDisplayFinalize(size_t display) override;
-        bool PresentFrameFinalize() override;
+        bool OSVR_RENDERMANAGER_EXPORT RenderDisplayInitialize(size_t display) override { return true; }
+        bool OSVR_RENDERMANAGER_EXPORT RenderDisplayFinalize(size_t display) override { return true; }
 
-        bool SolidColorEye(size_t eye, const RGBColorf &color) override;
+        bool OSVR_RENDERMANAGER_EXPORT RenderEyeInitialize(size_t eye) override;
+        bool OSVR_RENDERMANAGER_EXPORT RenderEyeFinalize(size_t eye) override { return true; }
+
+        bool OSVR_RENDERMANAGER_EXPORT RenderFrameInitialize() override { return true; }
+        bool OSVR_RENDERMANAGER_EXPORT RenderFrameFinalize() override;
+
+        bool OSVR_RENDERMANAGER_EXPORT PresentDisplayInitialize(size_t display) override;
+        bool OSVR_RENDERMANAGER_EXPORT PresentDisplayFinalize(size_t display) override;
+
+        bool OSVR_RENDERMANAGER_EXPORT PresentFrameInitialize() override { return true; }
+        bool OSVR_RENDERMANAGER_EXPORT PresentFrameFinalize() override;
+
+        bool OSVR_RENDERMANAGER_EXPORT PresentEye(PresentEyeParameters params) override;
+        bool OSVR_RENDERMANAGER_EXPORT SolidColorEye(size_t eye, const RGBColorf &color) override;
+
+        bool OSVR_RENDERMANAGER_EXPORT PresentRenderBuffersInternal(
+            const std::vector<RenderBuffer>& buffers,
+            const std::vector<RenderInfo>& renderInfoUsed,
+            const RenderParams& renderParams = RenderParams(),
+            const std::vector<OSVR_ViewportDescription>&
+            normalizedCroppingViewports =
+            std::vector<OSVR_ViewportDescription>(),
+            bool flipInY = false) override;
+
+        bool OSVR_RENDERMANAGER_EXPORT UpdateDistortionMeshesInternal(
+            DistortionMeshType type ///< Type of mesh to produce
+            ,
+            std::vector<DistortionParameters> const&
+            distort ///< Distortion parameters
+        ) override;
+
+        bool OSVR_RENDERMANAGER_EXPORT
+            RenderSpace(size_t whichSpace, ///< Index into m_callbacks vector
+                size_t whichEye, ///< Which eye are we rendering for?
+                OSVR_PoseState pose, ///< ModelView transform to use
+                OSVR_ViewportDescription viewport, ///< Viewport to use
+                OSVR_ProjectionMatrix projection ///< Projection to use
+            ) override;
 
         friend RenderManager OSVR_RENDERMANAGER_EXPORT*
         createRenderManager(OSVR_ClientContext context,

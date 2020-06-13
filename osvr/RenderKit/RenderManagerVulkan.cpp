@@ -33,6 +33,9 @@ ReliaSolve, Inc.
 
 #include <iostream>
 
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
 namespace osvr {
 namespace renderkit {
 
@@ -51,6 +54,9 @@ namespace renderkit {
     }
 
     RenderManagerVulkan::~RenderManagerVulkan() {
+        // Release any prior buffers we allocated
+        m_distortionMeshBuffer.clear();
+
         for (size_t i = 0; i < m_displays.size(); i++) {
             if (m_displays[i].m_window != nullptr) {
                 /// @todo Destroy each window
@@ -262,6 +268,156 @@ namespace renderkit {
       OSVR_TimeValue slackRequired = { 0, 1000 };
 
       return true;
+    }
+
+    bool RenderManagerVulkan::constructRenderBuffers() {
+        bool ret = true;
+
+        for (size_t i = 0; i < GetNumEyes(); i++) {
+
+            OSVR_ViewportDescription v;
+            ConstructViewportForRender(i, v);
+            unsigned width = static_cast<unsigned>(v.width);
+            unsigned height = static_cast<unsigned>(v.height);
+
+            // The color buffer for this eye.  We need to put this into
+            // a generic structure for the Present function, but we only need
+            // to fill in the Vulkan portion.
+            //  Note that this texture format must be RGBA and unsigned byte,
+            // so that we can present it to for DirectMode.
+            /// @todo
+
+            // Initialize a new render target texture description.
+            /// @todo
+            // We need it to be both a render target and a shader resource
+            /// @todo
+
+            // Create a new render target texture to use.
+            /// @todo
+
+            // Fill in the resource view for your render texture buffer here
+            /// @todo
+            // This must match what was created in the texture to be rendered
+            /// @todo
+
+            // Create the render target view.
+            /// @todo
+
+            // Push the filled-in RenderBuffer onto the vector.
+            /// @todo
+
+            //==================================================================
+            // Create a depth buffer
+
+            // Make the depth/stencil texture.
+            /// @todo
+
+            // Create the depth/stencil view description
+            /// @todo
+        }
+
+        // Create depth stencil state for the render path.
+        // Describe how depth and stencil tests should be performed.
+        /// @todo
+
+        // Front-facing stencil operations (draw front faces)
+        /// @todo
+
+        // Back-facing stencil operations (cull back faces)
+        /// @todo
+
+        // Store the info about the buffers for the render callbacks.
+        // Start with the 0th eye.
+        /// @todo
+
+        // Register the render buffers we're going to use to present
+        /// @todo
+
+        return ret;
+    }
+
+    bool RenderManagerVulkan::RenderPathSetup() {
+        //======================================================
+        // Construct the present buffers we're going to use when in Render()
+        // mode, to wrap the PresentMode interface.
+        if (!constructRenderBuffers()) {
+            m_log->error() << "RenderManagerVulkan::RenderPathSetup: Could not "
+                "construct present buffers to wrap Render() path";
+            return false;
+        }
+        return true;
+    }
+
+    bool RenderManagerVulkan::RenderEyeInitialize(size_t eye) {
+        // Bind our render target view to the appropriate one.
+        /// @todo
+
+        // Set the viewport for rendering to this eye.
+        /// @todo
+
+        // Call the display set-up callback for each eye, because they each
+        // have their own frame buffer.
+        /// @todo
+
+        return true;
+    }
+
+    bool RenderManagerVulkan::RenderFrameFinalize() {
+        return PresentRenderBuffersInternal(
+            m_renderBuffers, m_renderInfoForRender, m_renderParamsForRender);
+    }
+
+    bool RenderManagerVulkan::PresentEye(PresentEyeParameters params) {
+
+        if (params.m_buffer.Vulkan == nullptr) {
+            m_log->error() << "RenderManagerVulkan::PresentEye(): NULL buffer pointer";
+            return false;
+        }
+
+        /// @todo
+
+        return true;
+    }
+
+    bool RenderManagerVulkan::PresentRenderBuffersInternal(
+            const std::vector<RenderBuffer>& buffers,
+            const std::vector<RenderInfo>& renderInfoUsed,
+            const RenderParams& renderParams,
+            const std::vector<OSVR_ViewportDescription>&
+            normalizedCroppingViewports,
+            bool flipInY) {
+        /// @todo
+        return true;
+    }
+
+    bool RenderManagerVulkan::UpdateDistortionMeshesInternal(
+        DistortionMeshType type //< Type of mesh to produce
+        ,
+        std::vector<DistortionParameters> const&
+        distort //< Distortion parameters
+    ) {
+        /// @todo
+
+        return true;
+    }
+
+    bool RenderManagerVulkan::RenderSpace(size_t whichSpace, size_t whichEye,
+        OSVR_PoseState pose,
+        OSVR_ViewportDescription viewport,
+        OSVR_ProjectionMatrix projection) {
+        /// @todo Fill in the timing information
+        OSVR_TimeValue deadline;
+        deadline.microseconds = 0;
+        deadline.seconds = 0;
+
+        /// Fill in the information we pass to the render callback.
+        RenderCallbackInfo& cb = m_callbacks[whichSpace];
+        cb.m_callback(cb.m_userData, m_library, m_buffers, viewport, pose,
+            projection, deadline);
+
+        /// @todo Keep track of timing information
+
+        return true;
     }
 
 } // namespace renderkit

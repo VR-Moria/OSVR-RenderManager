@@ -69,6 +69,10 @@ namespace renderkit {
 #include "GraphicsLibraryOpenGL.h"
 #endif
 
+#ifdef RM_USE_VULKAN
+#include "RenderManagerVulkan.h"
+#endif
+
 #ifdef RM_USE_SENSICS
 #include "RenderManagerSensicsDS_D3D11.h"
 #endif
@@ -2686,6 +2690,8 @@ namespace renderkit {
                 return nullptr;
 #endif
             }
+        } else if (p.m_renderLibrary == "Vulkan") {
+            ret.reset(new RenderManagerVulkan(contextParameter, p));
         } else {
             m_log->error() << "Unrecognized render library: "
                       << p.m_renderLibrary;
