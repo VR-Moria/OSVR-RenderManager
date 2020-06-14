@@ -52,19 +52,32 @@ namespace renderkit {
         // Initialize our state.
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Vulkan SDL tutorial";
+        appInfo.pApplicationName = "OSVR";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
         VkInstanceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
-        createInfo.enabledExtensionCount = 0;
-        const char *eNames[] = { VK_KHR_SURFACE_EXTENSION_NAME };
+#if defined(_WIN32)
+        createInfo.enabledExtensionCount = 2;
+        const char* eNames[] = {
+            VK_KHR_SURFACE_EXTENSION_NAME,
+            VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+#else
+        createInfo.enabledExtensionCount = 1;
+        const char* eNames[] = { VK_KHR_SURFACE_EXTENSION_NAME };
+#endif
         createInfo.ppEnabledExtensionNames = eNames;
         VkResult result = vkCreateInstance(&createInfo, 0, &m_library.Vulkan->instance);
+        if (result != VK_SUCCESS) {
+            m_log->error()
+                << "RenderManagerVulkan::RenderManagerVulkan: Could not get "
+                << "instance, code " << result;
+            setDoingOkay(false);
+            return;
+        }
         /// @todo null the device and context pointers
 
         /// @todo Initialize depth/stencil state for rendering

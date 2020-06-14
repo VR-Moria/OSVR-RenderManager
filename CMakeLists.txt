@@ -420,6 +420,9 @@ add_library(osvrRenderManager ${RenderManager_SOURCES} ${RenderManager_PUBLIC_HE
 if (NOT ANDROID)
   target_compile_features(osvrRenderManager PRIVATE cxx_range_for)
 endif()
+if (WIN32 AND Vulkan_FOUND)
+  target_compile_definitions(osvrRenderManager PUBLIC VK_USE_PLATFORM_WIN32_KHR)
+endif()
 
 target_include_directories(osvrRenderManager PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
