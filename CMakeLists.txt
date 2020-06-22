@@ -533,7 +533,7 @@ target_link_libraries(osvrRenderManager
 	PRIVATE
 	JsonCpp::JsonCpp
 	osvr::osvrUtil
-        osvr::osvrCommon
+    osvr::osvrCommon
 	vendored-vrpn
 	vendored-quat)
 osvrrm_copy_deps(osvr::osvrClientKit osvr::osvrClient osvr::osvrCommon osvr::osvrUtil)

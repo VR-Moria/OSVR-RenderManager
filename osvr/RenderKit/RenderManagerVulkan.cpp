@@ -52,9 +52,10 @@ namespace renderkit {
         // Initialize our state.
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "OSVR";
+        appInfo.pApplicationName = m_params.m_windowTitle.c_str();
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.pEngineName = "OSVR RenderManager";
+        appInfo.engineVersion = VK_MAKE_VERSION(0, 6, 53);
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
         VkInstanceCreateInfo createInfo = {};
@@ -70,7 +71,7 @@ namespace renderkit {
         const char* eNames[] = { VK_KHR_SURFACE_EXTENSION_NAME };
 #endif
         createInfo.ppEnabledExtensionNames = eNames;
-        VkResult result = vkCreateInstance(&createInfo, 0, &m_library.Vulkan->instance);
+        VkResult result = vkCreateInstance(&createInfo, nullptr, &m_library.Vulkan->instance);
         if (result != VK_SUCCESS) {
             m_log->error()
                 << "RenderManagerVulkan::RenderManagerVulkan: Could not get "
