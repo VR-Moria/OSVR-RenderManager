@@ -50,6 +50,8 @@ namespace renderkit {
         m_buffers.Vulkan = new RenderBufferVulkan;
 
         // Initialize our state.
+        /// @todo Enable the client code to provide us with an instance pointer or factory
+        /// @todo Provide control over which layers are active
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = m_params.m_windowTitle.c_str();
@@ -61,17 +63,49 @@ namespace renderkit {
         VkInstanceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
-#if defined(_WIN32)
+
+        // Set the extensions that we want to enable as a subset of those
+        // that are available.
+#if 0
+    #if defined(_WIN32)
+        /// @todo Subset the extensions to only ask for the ones we need.
         createInfo.enabledExtensionCount = 2;
         const char* eNames[] = {
             VK_KHR_SURFACE_EXTENSION_NAME,
             VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
-#else
+    #else
         createInfo.enabledExtensionCount = 1;
         const char* eNames[] = { VK_KHR_SURFACE_EXTENSION_NAME };
+    #endif
 #endif
-        createInfo.ppEnabledExtensionNames = eNames;
-        VkResult result = vkCreateInstance(&createInfo, nullptr, &m_library.Vulkan->instance);
+        VkResult result;
+        uint32_t numExtensions = 0;
+        std::vector<VkExtensionProperties> extensions;
+        result = vkEnumerateInstanceExtensionProperties(nullptr, &numExtensions, nullptr);
+        if (result != VK_SUCCESS) {
+            m_log->error()
+                << "RenderManagerVulkan::RenderManagerVulkan: Could not get "
+                << "extension count, code " << result;
+            setDoingOkay(false);
+            return;
+        }
+        extensions.resize(numExtensions);
+        result = vkEnumerateInstanceExtensionProperties(nullptr, &numExtensions, &extensions[0]);
+        if (result != VK_SUCCESS) {
+            m_log->error()
+                << "RenderManagerVulkan::RenderManagerVulkan: Could not get "
+                << "extension list, code " << result;
+            setDoingOkay(false);
+            return;
+        }
+        std::vector<char const*> extensionNames;
+        for (size_t i = 0; i < extensions.size(); i++) {
+            extensionNames.push_back(extensions[i].extensionName);
+        }
+        createInfo.enabledExtensionCount = numExtensions;
+        createInfo.ppEnabledExtensionNames = &extensionNames[0];
+
+        result = vkCreateInstance(&createInfo, nullptr, &m_library.Vulkan->instance);
         if (result != VK_SUCCESS) {
             m_log->error()
                 << "RenderManagerVulkan::RenderManagerVulkan: Could not get "
@@ -134,14 +168,12 @@ namespace renderkit {
             return withFailure();
         }
 
-        /// @todo How to handle window resizing?
-
         //======================================================
-        // Use SDL to get us a window.
-        /// @todo Enable DirectMode windows when they are asked for, using
-        // OS-native calls.
+        // If we're not using a full-screen display then we are going to
+        // use SDL to get us a window so we need to initialize SDL.
 
         // Initialize the SDL video subsystem.
+        /// @todo How to handle window resizing?
         if (!SDLInitQuit()) {
             m_log->error() << "RenderManagerVulkan::OpenDisplay: Could not "
                 "initialize SDL";
