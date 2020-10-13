@@ -45,11 +45,17 @@
 #include <string>
 #include <stdlib.h> // For exit()
 
+#include <fstream>  //for parsing text file
+
 // This must come after we include <GL/gl.h> so its pointer types are defined.
 #include <osvr/RenderKit/GraphicsLibraryOpenGL.h>
 
 // Forward declarations of rendering functions defined below.
 void draw_cube(double radius);
+// void draw_room(double radius);
+void draw_floor(double radius);
+void draw_hallway(double radius);
+void draw_pound(double radius);
 
 // Set to true when it is time for the application to quit.
 // Handlers below that set it to true when the user causes
@@ -213,12 +219,120 @@ void DrawWorld(
     glLoadIdentity();
     glMultMatrixd(modelView);
 
+    //change view to middle of room
+    glTranslated(-10, 0, 10);
+
+
+    //open text file and parse one char at a time, 
+    //carriage return at every newline
+    std::ifstream ifs;
+    std::cerr << "attempting to open text file\n";
+    ifs.open ("C:\\Users\\bkoester\\Documents\\COMP523\\OSVR\\OSVR-Installer\\vendored\\OSVR-RenderManager\\examples\\test.txt", std::ifstream::in);
+    if (ifs.is_open()) {
+        std::cerr << "opened file\n";
+    } else {
+        std::cerr << "could not open file\n";
+        perror("file.txt ");  
+        exit(1);
+    }
+    char c;
+    int i = 0;
+    while (ifs.get(c)) {         // loop getting single characters
+        std::cerr << c;
+        char curr = c;
+        switch(curr) {
+            case '#':
+                std::cerr << "rendering wall";
+                draw_pound(5.0);
+                break;
+            case '.':
+                std::cerr << "rendering floor";
+                draw_floor(5.0);
+                break;
+            case 'c':
+                std::cerr << "rendering monster";
+                draw_floor(5.0);
+                draw_cube(1.0);
+                break;
+        }
+        if (c =='\n') {
+            glTranslated(10, 0, (i*10));
+            i = 0;
+        } else {
+            glTranslated(0, 0, -10);
+            i += 1;
+        }
+        
+    }
+    ifs.close();                // close file
+    
+    
+    // //map array
+    // int map[4][4] = {{'#', '#', '#', '#'},
+    //                  {'#', '.', '.', '#'},
+    //                  {'#', '.', 'c', '#'},
+    //                  {'#', '#', '#', '#'}};
+
+    
+
+    // //draw map
+    // for (int i=0; i<4; i++) {
+    //     for (int j=0; j<4; j++) {
+    //         switch(map[i][j]) {
+    //             case '#':
+    //                 draw_pound(5.0);
+    //                 break;
+    //             case '.':
+    //                 draw_floor(5.0);
+    //                 break;
+    //             case 'c':
+    //                 draw_floor(5.0);
+    //                 draw_cube(1.0);
+    //                 break;
+    //             default:
+    //                 break;
+    //         }
+    //         if (j == 3) {
+    //             glTranslated(10, 0, 30);
+    //         } else {
+    //             glTranslated(0, 0, -10);
+    //         }
+    //     }
+    // }
+    
+   
+
+    //draw hallway
+    // draw_hallway(5.0);
+    // glTranslated(0, 0, -10);
+
+    // draw_hallway(5.0);
+    // glTranslated(0, 0, -10);
+
+    // draw_hallway(5.0);
+    // glTranslated(0, 0, -10);
+
+    // draw_hallway(5.0);
+    // glTranslated(0, 0, -10);
+
+    // draw_hallway(5.0);
+    // glTranslated(0, 0, 5);
+
     /// Draw a cube with a 5-meter radius as the room we are floating in.
-    draw_cube(5.0);
+    // draw_cube(5.0);
+
+    //draw floor
+    // draw_floor(5.0);
 
     // Draw another cube 1 meter along the -Z axis
-    glTranslated(0, 0, -1);
-    draw_cube(0.1);
+    // glTranslated(0, 0, -1);
+    // draw_cube(0.1);
+
+    // glTranslated(0, 0, 2);
+    // draw_cube(0.1);
+
+    // glTranslated(0,1,-1);
+    // draw_cube(0.1);
 }
 
 // This can be used to draw a heads-up display.  Unlike in a non-VR game,
@@ -465,6 +579,71 @@ static float blu_col[] = {0.0, 0.0, 1.0};
 static float yel_col[] = {1.0, 1.0, 0.0};
 static float lightblu_col[] = {0.0, 1.0, 1.0};
 static float pur_col[] = {1.0, 0.0, 1.0};
+static float grey[] = {0.8, 0.8, 0.8};
+
+void draw_floor(double radius) {
+    glPushMatrix();
+    glScaled(radius, radius, radius);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, matspec);
+    glMaterialf(GL_FRONT, GL_SHININESS, 64.0);
+
+    glBegin(GL_POLYGON);
+    glColor3fv(yel_col);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, yel_col);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, yel_col);
+    glNormal3f(0.0, -1.0, 0.0);
+    glVertex3f(1.0, -1.0, 1.0);
+    glVertex3f(-1.0, -1.0, 1.0);
+    glVertex3f(-1.0, -1.0, -1.0);
+    glVertex3f(1.0, -1.0, -1.0);
+    glEnd();
+
+    glPopMatrix();
+}
+void draw_hallway(double radius) {
+    glPushMatrix();
+    glScaled(radius, radius, radius);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, matspec);
+    glMaterialf(GL_FRONT, GL_SHININESS, 64.0);
+
+    //floor
+    glBegin(GL_POLYGON);
+    glColor3fv(blu_col);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, blu_col);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, blu_col);
+    glNormal3f(0.0, -1.0, 0.0);
+    glVertex3f(1.0, -1.0, 1.0);
+    glVertex3f(-1.0, -1.0, 1.0);
+    glVertex3f(-1.0, -1.0, -1.0);
+    glVertex3f(1.0, -1.0, -1.0);
+    glEnd();
+
+    //right wall
+    glBegin(GL_POLYGON);
+    glColor3fv(grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, grey);
+    glNormal3f(1.0, 0.0, 0.0);
+    glVertex3f(1.0, -1.0, 1.0);
+    glVertex3f(1.0, -1.0, -1.0);
+    glVertex3f(1.0, 1.0, -1.0);
+    glVertex3f(1.0, 1.0, 1.0);
+    glEnd();
+
+    //left wall
+    glBegin(GL_POLYGON);
+    glColor3fv(grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, grey);
+    glNormal3f(-1.0, 0.0, 0.0);
+    glVertex3f(-1.0, 1.0, 1.0);
+    glVertex3f(-1.0, 1.0, -1.0);
+    glVertex3f(-1.0, -1.0, -1.0);
+    glVertex3f(-1.0, -1.0, 1.0);
+    glEnd();
+
+    glPopMatrix();
+}
 
 void draw_cube(double radius) {
     glPushMatrix();
@@ -525,6 +704,74 @@ void draw_cube(double radius) {
     glColor3fv(red_col);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, red_col);
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, red_col);
+    glNormal3f(1.0, 0.0, 0.0);
+    glVertex3f(1.0, -1.0, 1.0);
+    glVertex3f(1.0, -1.0, -1.0);
+    glVertex3f(1.0, 1.0, -1.0);
+    glVertex3f(1.0, 1.0, 1.0);
+    glEnd();
+    glPopMatrix();
+}
+
+void draw_pound(double radius) {
+    glPushMatrix();
+    glScaled(radius, radius, radius);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, matspec);
+    glMaterialf(GL_FRONT, GL_SHININESS, 64.0);
+    glBegin(GL_POLYGON);
+    glColor3fv(grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, grey);
+    glNormal3f(0.0, 0.0, -1.0);
+    glVertex3f(1.0, 1.0, -1.0);
+    glVertex3f(1.0, -1.0, -1.0);
+    glVertex3f(-1.0, -1.0, -1.0);
+    glVertex3f(-1.0, 1.0, -1.0);
+    glEnd();
+    glBegin(GL_POLYGON);
+    glColor3fv(grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, grey);
+    glNormal3f(0.0, 0.0, 1.0);
+    glVertex3f(-1.0, 1.0, 1.0);
+    glVertex3f(-1.0, -1.0, 1.0);
+    glVertex3f(1.0, -1.0, 1.0);
+    glVertex3f(1.0, 1.0, 1.0);
+    glEnd();
+    glBegin(GL_POLYGON);
+    glColor3fv(grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, grey);
+    glNormal3f(0.0, -1.0, 0.0);
+    glVertex3f(1.0, -1.0, 1.0);
+    glVertex3f(-1.0, -1.0, 1.0);
+    glVertex3f(-1.0, -1.0, -1.0);
+    glVertex3f(1.0, -1.0, -1.0);
+    glEnd();
+    glBegin(GL_POLYGON);
+    glColor3fv(grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, grey);
+    glNormal3f(0.0, 1.0, 0.0);
+    glVertex3f(1.0, 1.0, 1.0);
+    glVertex3f(1.0, 1.0, -1.0);
+    glVertex3f(-1.0, 1.0, -1.0);
+    glVertex3f(-1.0, 1.0, 1.0);
+    glEnd();
+    glBegin(GL_POLYGON);
+    glColor3fv(grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, grey);
+    glNormal3f(-1.0, 0.0, 0.0);
+    glVertex3f(-1.0, 1.0, 1.0);
+    glVertex3f(-1.0, 1.0, -1.0);
+    glVertex3f(-1.0, -1.0, -1.0);
+    glVertex3f(-1.0, -1.0, 1.0);
+    glEnd();
+    glBegin(GL_POLYGON);
+    glColor3fv(grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, grey);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, grey);
     glNormal3f(1.0, 0.0, 0.0);
     glVertex3f(1.0, -1.0, 1.0);
     glVertex3f(1.0, -1.0, -1.0);
